@@ -35,18 +35,7 @@ pipeline {
         }
             }
         }
-        stage('Deploy'){
-            steps{
-                dir("${WORKSPACE}") {
-                    sh """
-                    sed -i 's/${DOCKERHUB_USERNAME}\\/${APP_NAME}/${DOCKERHUB_USERNAME}\\/${APP_NAME}:${IMAGE_TAG}/g' deployment.yml
-                    
-
-                    
-                    """
-                }
-            }
-        }
+        
         stage('Cleanup workspace'){
             steps{
                 script{
