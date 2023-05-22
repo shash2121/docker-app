@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+    environment{
+        DOCKERHUB_USERNAME = "sha2121"
+        APP_NAME="py-app"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        IMAGE_NAME = "${DOCKERHUB_USERNAME}"+ "/" + "${APP_NAME}"
+        REGISTRY_CREDS = 'dockerhub'
+    }
+    stages{
+        stage('Cleanup workspace'){
+            steps{
+                script{
+                    cleanWs()
+                }
+            }
+        }
+        stage('git clone'){
+            steps{
+            checkout([
+          $class: 'GitSCM',
+          branches: [[name: '*/main']],
+          userRemoteConfigs: [[url: 'https://github.com/vikash-kumar01/gitops_argocd_project.git']]
+        ])
+        }
+        }
+        stage('Build docker image'){
+            steps{
+            dir('/home/ubuntu/tf-code/dockerfile') {
+          sh """
+            sudo docker build -t ${IMAGE_NAME} .
+            sudo docker push ${IMAGE_NAME}:${IMAGE_TAG}
+            """
+        }
+            }
+        }
+    }
+}
