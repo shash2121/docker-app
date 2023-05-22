@@ -19,6 +19,14 @@ pipeline{
                     kubectl apply -f service.yml
                     """
                 }
+                
+            }
+        }
+        stage('Cleanup workspace'){
+            steps{
+                script{
+                    cleanWs()
+                }
             }
         }
     }
