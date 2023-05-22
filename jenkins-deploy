@@ -1,0 +1,25 @@
+pipeline{
+    agent any
+    stages{
+        stage('git clone'){
+            steps{
+            checkout([
+          $class: 'GitSCM',
+          branches: [[name: '*/main']],
+          userRemoteConfigs: [[url: 'https://github.com/shash2121/docker-app.git']]
+        ])
+        }
+        }
+        stage('Deploy'){
+            steps{
+                dir("${WORKSPACE}") {
+                    sh """
+                    sed -i 's/${DOCKERHUB_USERNAME}\\/${APP_NAME}/${DOCKERHUB_USERNAME}\\/${APP_NAME}:${IMAGE_TAG}/g' deployment.yml
+                    kubectl apply -f deployment.yml
+                    kubectl apply -f service.yml
+                    """
+                }
+            }
+        }
+    }
+}
