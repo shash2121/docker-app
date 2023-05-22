@@ -6,6 +6,7 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
         IMAGE_NAME = "${DOCKERHUB_USERNAME}"+ "/" + "${APP_NAME}"
         REGISTRY_CREDS = 'dockerhub'
+        
     }
     stages{
         stage('Cleanup workspace'){
@@ -20,18 +21,35 @@ pipeline {
             checkout([
           $class: 'GitSCM',
           branches: [[name: '*/main']],
-          userRemoteConfigs: [[url: 'https://github.com/vikash-kumar01/gitops_argocd_project.git']]
+          userRemoteConfigs: [[url: 'https://github.com/shash2121/docker-app.git']]
         ])
         }
         }
+        stage('docker login'){
+            steps{
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'password', usernameVariable: 'username')]) {
+    sh "docker login -u $username -p $password"
+}
+            }
+        }
         stage('Build docker image'){
             steps{
-            dir('/home/ubuntu/tf-code/dockerfile') {
+           dir("${WORKSPACE}") {
           sh """
-            sudo docker build -t ${IMAGE_NAME} .
-            sudo docker push ${IMAGE_NAME}:${IMAGE_TAG}
+            docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+            docker push ${IMAGE_NAME}:${IMAGE_TAG}
             """
         }
+            }
+        }
+        stage('Deploy'){
+            steps{
+                dir("${WORKSPACE}") {
+                    sh """
+                    sed -i 's/${IMAGE_NAME}/${IMAGE_NAME}:${IMAGE_TAG}' deployment.yml
+                    cat deployment.yml
+                    """
+                }
             }
         }
     }
