@@ -1,5 +1,15 @@
 pipeline{
     agent any
+    environment{
+        DOCKERHUB_USERNAME = "sha2121"
+        APP_NAME="py-app"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        IMAGE_NAME = "${DOCKERHUB_USERNAME}"+ "/" + "${APP_NAME}"
+        REGISTRY_CREDS = 'dockerhub'
+    }
+     parameters {
+        string(name: 'BUILD_NUMBER')
+    }
     stages{
         stage('git clone'){
             steps{
@@ -14,7 +24,8 @@ pipeline{
             steps{
                 dir("${WORKSPACE}") {
                     sh """
-                    sed -i 's/${DOCKERHUB_USERNAME}\\/${APP_NAME}/${DOCKERHUB_USERNAME}\\/${APP_NAME}:${IMAGE_TAG}/g' deployment.yml
+                    sed -i 's/${DOCKERHUB_USERNAME}\\/${APP_NAME}/${DOCKERHUB_USERNAME}\\/${APP_NAME}:${BUILD_NUMBER}/g' deployment.yml
+                    export KUBECONFIG=~/.kube/config-kind
                     kubectl apply -f deployment.yml
                     kubectl apply -f service.yml
                     """
@@ -25,7 +36,7 @@ pipeline{
         stage('Cleanup workspace'){
             steps{
                 script{
-                    cleanWs()
+                  cleanWs()
                 }
             }
         }
